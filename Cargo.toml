@@ -1,0 +1,16 @@
+[package]
+name = "dtoa-benchmark"
+version = "0.0.1"
+authors = ["David Tolnay <dtolnay@gmail.com>"]
+description = "This benchmark evaluates the performance of conversion from double precision IEEE-754 floating point (f64) to ASCII string"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/dtolnay/dtoa-benchmark"
+publish = false
+
+[dependencies]
+arrayvec = "0.7"
+dtoa = "1.0.10"
+ryu = "1.0.21"
+teju = "0.1.1"
+zmij = "0.1.1"
