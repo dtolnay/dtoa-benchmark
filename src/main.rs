@@ -17,8 +17,8 @@ use std::hint;
 use std::time::{Duration, Instant};
 
 const COUNT: usize = 100_000;
-const PASSES: usize = 2;
-const TRIALS: usize = 3;
+const PASSES: usize = 3;
+const TRIALS: usize = 12;
 
 type F<T> = fn(T, &mut dyn FnMut(&str));
 
