@@ -10,10 +10,9 @@ use rand::rngs::SmallRng;
 use rand::{RngCore as _, SeedableRng as _};
 use std::fmt::Write as _;
 use std::hint;
-use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
-const VERIFY_RANDOM_COUNT: usize = 100_000;
+const COUNT: usize = 100_000;
 const PASSES: usize = 2;
 const TRIALS: usize = 3;
 
@@ -84,6 +83,7 @@ fn verify_value(value: f64, f: F) -> usize {
 }
 
 fn verify(f: F, name: &str) {
+    const VERIFY_RANDOM_COUNT: usize = 100_000;
     print!("Verifying {name:20} ... ");
 
     // Boundary and simple cases
@@ -128,55 +128,44 @@ fn verify_all() {
     }
 }
 
-struct RandomDigitData;
+struct Data;
 
-impl RandomDigitData {
+impl Data {
     const MAX_DIGIT: usize = 17;
-    const COUNT: usize = 100_000;
 
-    fn get_data(digit: usize) -> &'static [f64; Self::COUNT] {
-        assert!((1..=17).contains(&digit));
+    fn random(count: usize) -> [Vec<f64>; Self::MAX_DIGIT] {
+        let mut data = [const { Vec::new() }; Self::MAX_DIGIT];
+        let mut rng = SmallRng::seed_from_u64(1);
 
-        static SINGLETON: OnceLock<Vec<f64>> = OnceLock::new();
+        for digit in 1..=Self::MAX_DIGIT {
+            for _i in 0..count {
+                let mut d;
+                while {
+                    d = f64::from_bits(rng.next_u64());
+                    d.is_nan() || d.is_infinite()
+                } {}
 
-        let data = SINGLETON.get_or_init(|| {
-            let mut data = Vec::with_capacity(Self::MAX_DIGIT * Self::COUNT);
+                // Convert to string with limited digits, and convert it back.
+                let buffer = format!("{:.prec$e}", d, prec = digit - 1);
+                let roundtrip = buffer.parse().unwrap();
 
-            let mut r = SmallRng::seed_from_u64(1);
-
-            for digit in 1..=Self::MAX_DIGIT {
-                for _i in 0..Self::COUNT {
-                    let mut d;
-                    while {
-                        d = f64::from_bits(r.next_u64());
-                        d.is_nan() || d.is_infinite()
-                    } {}
-
-                    // Convert to string with limited digits, and convert it back.
-                    let buffer = format!("{:.prec$e}", d, prec = digit - 1);
-                    let roundtrip = buffer.parse().unwrap();
-
-                    data.push(roundtrip);
-                }
+                data[digit - 1].push(roundtrip);
             }
+        }
 
-            data
-        });
-
-        &data.as_chunks().0[digit - 1]
+        data
     }
 }
 
-fn measure(f: F, name: &str) {
+fn measure(data: &[Vec<f64>; Data::MAX_DIGIT], f: F, name: &str) {
     println!("\n{name}");
 
-    for digit in 1..=RandomDigitData::MAX_DIGIT {
-        let data = RandomDigitData::get_data(digit);
+    for (i, vec) in data.iter().enumerate() {
         let mut duration = Duration::MAX;
         for _trial in 0..TRIALS {
             let begin = Instant::now();
             for _pass in 0..PASSES {
-                for &value in data {
+                for &value in vec {
                     f(value, &mut |repr| {
                         hint::black_box(repr);
                     });
@@ -185,15 +174,19 @@ fn measure(f: F, name: &str) {
             duration = Ord::min(duration, begin.elapsed());
         }
         println!(
-            "  ({digit}, {:.2})",
-            duration.as_secs_f64() * 1e9 / (PASSES * RandomDigitData::COUNT) as f64,
+            "  ({}, {:.2})",
+            i + 1,
+            duration.as_secs_f64() * 1e9 / (PASSES * vec.len()) as f64,
         );
     }
 }
 
 fn main() {
     verify_all();
+
+    let data = Data::random(COUNT);
+
     for imp in IMPLS {
-        measure(imp.dtoa, imp.name);
+        measure(&data, imp.dtoa, imp.name);
     }
 }
