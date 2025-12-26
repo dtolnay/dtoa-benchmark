@@ -16,9 +16,9 @@ use std::fmt::Write as _;
 use std::hint;
 use std::time::{Duration, Instant};
 
-const COUNT: usize = 100_000;
-const PASSES: usize = 3;
-const TRIALS: usize = 12;
+const COUNT: usize = if cfg!(miri) { 10 } else { 100_000 };
+const TRIALS: usize = if cfg!(miri) { 1 } else { 3 };
+const PASSES: usize = if cfg!(miri) { 1 } else { 12 };
 
 type F<T> = fn(T, &mut dyn FnMut(&str));
 
@@ -103,7 +103,7 @@ fn verify_value(value: f64, f: F<f64>) -> usize {
 }
 
 fn verify(f: F<f64>, name: &str) {
-    const VERIFY_RANDOM_COUNT: usize = 100_000;
+    const VERIFY_RANDOM_COUNT: usize = if cfg!(miri) { 40 } else { 100_000 };
     print!("Verifying {name:20} ... ");
 
     // Boundary and simple cases
