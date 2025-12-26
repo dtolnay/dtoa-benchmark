@@ -5,9 +5,13 @@
     clippy::unreadable_literal
 )]
 
+mod traits;
+
 use arrayvec::ArrayString;
+use rand::distr::{Distribution, StandardUniform};
 use rand::rngs::SmallRng;
 use rand::{RngCore as _, SeedableRng as _};
+use std::any;
 use std::fmt::Write as _;
 use std::hint;
 use std::time::{Duration, Instant};
@@ -16,18 +20,24 @@ const COUNT: usize = 100_000;
 const PASSES: usize = 2;
 const TRIALS: usize = 3;
 
-type F = fn(f64, &mut dyn FnMut(&str));
+type F<T> = fn(T, &mut dyn FnMut(&str));
 
 #[derive(Copy, Clone)]
 struct Impl {
     name: &'static str,
-    dtoa: F,
+    f32: F<f32>,
+    f64: F<f64>,
 }
 
 static IMPLS: &[Impl] = &[
     Impl {
         name: "core[Display]",
-        dtoa: |value, f| {
+        f32: |value, f| {
+            let mut buffer = ArrayString::<327>::new();
+            write!(buffer, "{value}").unwrap();
+            f(&buffer);
+        },
+        f64: |value, f| {
             let mut buffer = ArrayString::<327>::new();
             write!(buffer, "{value}").unwrap();
             f(&buffer);
@@ -35,7 +45,12 @@ static IMPLS: &[Impl] = &[
     },
     Impl {
         name: "core[LowerExp]",
-        dtoa: |value, f| {
+        f32: |value, f| {
+            let mut buffer = ArrayString::<24>::new();
+            write!(buffer, "{value:e}").unwrap();
+            f(&buffer);
+        },
+        f64: |value, f| {
             let mut buffer = ArrayString::<24>::new();
             write!(buffer, "{value:e}").unwrap();
             f(&buffer);
@@ -43,27 +58,32 @@ static IMPLS: &[Impl] = &[
     },
     Impl {
         name: "dtoa",
-        dtoa: |value, f| f(dtoa::Buffer::new().format_finite(value)),
+        f32: |value, f| f(dtoa::Buffer::new().format_finite(value)),
+        f64: |value, f| f(dtoa::Buffer::new().format_finite(value)),
     },
     Impl {
         name: "ryu",
-        dtoa: |value, f| f(ryu::Buffer::new().format_finite(value)),
+        f32: |value, f| f(ryu::Buffer::new().format_finite(value)),
+        f64: |value, f| f(ryu::Buffer::new().format_finite(value)),
     },
     Impl {
         name: "teju",
-        dtoa: |value, f| f(teju::Buffer::new().format_finite(value)),
+        f32: |value, f| f(teju::Buffer::new().format_finite(value)),
+        f64: |value, f| f(teju::Buffer::new().format_finite(value)),
     },
     Impl {
         name: "zmij",
-        dtoa: |value, f| f(zmij::Buffer::new().format_finite(value)),
+        f32: |value, f| f(zmij::Buffer::new().format_finite(value)),
+        f64: |value, f| f(zmij::Buffer::new().format_finite(value)),
     },
     Impl {
         name: "null",
-        dtoa: |_value, f| f(""),
+        f32: |_value, f| f(""),
+        f64: |_value, f| f(""),
     },
 ];
 
-fn verify_value(value: f64, f: F) -> usize {
+fn verify_value(value: f64, f: F<f64>) -> usize {
     let mut len = 0;
 
     f(value, &mut |actual| {
@@ -82,7 +102,7 @@ fn verify_value(value: f64, f: F) -> usize {
     len
 }
 
-fn verify(f: F, name: &str) {
+fn verify(f: F<f64>, name: &str) {
     const VERIFY_RANDOM_COUNT: usize = 100_000;
     print!("Verifying {name:20} ... ");
 
@@ -123,43 +143,57 @@ fn verify(f: F, name: &str) {
 fn verify_all() {
     for imp in IMPLS {
         if imp.name != "null" {
-            verify(imp.dtoa, imp.name);
+            verify(imp.f64, imp.name);
         }
     }
 }
 
-struct Data;
+struct Data {
+    f32: [Vec<f32>; 9],
+    f64: [Vec<f64>; 17],
+}
 
 impl Data {
-    const MAX_DIGIT: usize = 17;
-
-    fn random(count: usize) -> [Vec<f64>; Self::MAX_DIGIT] {
-        let mut data = [const { Vec::new() }; Self::MAX_DIGIT];
+    fn random(count: usize) -> Self {
         let mut rng = SmallRng::seed_from_u64(1);
-
-        for digit in 1..=Self::MAX_DIGIT {
-            for _i in 0..count {
-                let mut d;
-                while {
-                    d = f64::from_bits(rng.next_u64());
-                    d.is_nan() || d.is_infinite()
-                } {}
-
-                // Convert to string with limited digits, and convert it back.
-                let buffer = format!("{:.prec$e}", d, prec = digit - 1);
-                let roundtrip = buffer.parse().unwrap();
-
-                data[digit - 1].push(roundtrip);
-            }
-        }
-
+        let mut data = Data {
+            f32: [const { Vec::new() }; 9],
+            f64: [const { Vec::new() }; 17],
+        };
+        fill(&mut rng, &mut data.f32, count);
+        fill(&mut rng, &mut data.f64, count);
         data
     }
 }
 
-fn measure(data: &[Vec<f64>; Data::MAX_DIGIT], f: F, name: &str) {
-    println!("\n{name}");
+fn fill<T, const N: usize>(rng: &mut SmallRng, data: &mut [Vec<T>; N], count: usize)
+where
+    T: traits::Float,
+    StandardUniform: Distribution<T::Bits>,
+{
+    for (prec, vec) in data.iter_mut().enumerate() {
+        vec.reserve_exact(count);
+        for _i in 0..count {
+            let mut d;
+            while {
+                let bits = StandardUniform.sample(rng);
+                d = T::from_bits(bits);
+                !d.is_finite()
+            } {}
 
+            // Convert to string with limited digits, and convert it back.
+            let buffer = format!("{d:.prec$e}");
+            let roundtrip = buffer.parse().unwrap();
+            vec.push(roundtrip);
+        }
+    }
+}
+
+fn measure<T, const N: usize>(data: &[Vec<T>; N], f: F<T>)
+where
+    T: traits::Float,
+{
+    println!("  {}", any::type_name::<T>());
     for (i, vec) in data.iter().enumerate() {
         let mut duration = Duration::MAX;
         for _trial in 0..TRIALS {
@@ -174,7 +208,7 @@ fn measure(data: &[Vec<f64>; Data::MAX_DIGIT], f: F, name: &str) {
             duration = Ord::min(duration, begin.elapsed());
         }
         println!(
-            "  ({}, {:.2})",
+            "    ({}, {:.2})",
             i + 1,
             duration.as_secs_f64() * 1e9 / (PASSES * vec.len()) as f64,
         );
@@ -187,6 +221,8 @@ fn main() {
     let data = Data::random(COUNT);
 
     for imp in IMPLS {
-        measure(&data, imp.dtoa, imp.name);
+        println!("\n{}", imp.name);
+        measure(&data.f32, imp.f32);
+        measure(&data.f64, imp.f64);
     }
 }
