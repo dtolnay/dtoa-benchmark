@@ -6,6 +6,8 @@
 )]
 
 use arrayvec::ArrayString;
+use rand::rngs::SmallRng;
+use rand::{RngCore as _, SeedableRng as _};
 use std::fmt::Write as _;
 use std::hint;
 use std::sync::OnceLock;
@@ -62,21 +64,6 @@ static TESTS: &[Test] = &[
     },
 ];
 
-struct Random {
-    seed: u32,
-}
-
-impl Random {
-    pub fn new() -> Self {
-        Random { seed: 0 }
-    }
-
-    pub fn get(&mut self) -> u32 {
-        self.seed = self.seed.wrapping_mul(214013).wrapping_add(531011);
-        self.seed
-    }
-}
-
 fn verify_value(value: f64, f: F, expect: Option<&str>) -> usize {
     let mut len = 0;
 
@@ -123,15 +110,14 @@ fn verify(f: F, fname: &str) {
     verify_value(f64::MAX, f, None);
     verify_value(0.0f64.next_up(), f, None);
 
-    let mut r = Random::new();
+    let mut r = SmallRng::seed_from_u64(1);
 
     let mut len_sum = 0u64;
     let mut len_max = 0usize;
     for _i in 0..VERIFY_RANDOM_COUNT {
         let mut d;
         while {
-            let u = (u64::from(r.get()) << 32) | u64::from(r.get());
-            d = f64::from_bits(u);
+            d = f64::from_bits(r.next_u64());
             d.is_nan() || d.is_infinite()
         } {}
         let len = verify_value(d, f, None);
@@ -165,14 +151,13 @@ impl RandomDigitData {
         let data = SINGLETON.get_or_init(|| {
             let mut data = Vec::with_capacity(Self::MAX_DIGIT * Self::COUNT);
 
-            let mut r = Random::new();
+            let mut r = SmallRng::seed_from_u64(1);
 
             for digit in 1..=Self::MAX_DIGIT {
                 for _i in 0..Self::COUNT {
                     let mut d;
                     while {
-                        let u = (u64::from(r.get()) << 32) | u64::from(r.get());
-                        d = f64::from_bits(u);
+                        d = f64::from_bits(r.next_u64());
                         d.is_nan() || d.is_infinite()
                     } {}
 
