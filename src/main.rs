@@ -66,6 +66,7 @@ static IMPLS: &[Impl] = &[
         f32: |value, f| f(ryu::Buffer::new().format_finite(value)),
         f64: |value, f| f(ryu::Buffer::new().format_finite(value)),
     },
+    #[cfg(not(miri))]
     Impl {
         name: "teju",
         f32: |value, f| f(teju::Buffer::new().format_finite(value)),
