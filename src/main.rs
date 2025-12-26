@@ -11,7 +11,7 @@ use rand::{RngCore as _, SeedableRng as _};
 use std::fmt::Write as _;
 use std::hint;
 use std::sync::OnceLock;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 const VERIFY_RANDOM_COUNT: usize = 100_000;
 const PASSES: usize = 2;
@@ -172,24 +172,22 @@ fn measure(f: F, name: &str) {
 
     for digit in 1..=RandomDigitData::MAX_DIGIT {
         let data = RandomDigitData::get_data(digit);
-
-        let mut duration = f64::MAX;
+        let mut duration = Duration::MAX;
         for _trial in 0..TRIALS {
             let begin = Instant::now();
-
             for _pass in 0..PASSES {
-                for &i in data {
-                    f(i, &mut |repr| {
+                for &value in data {
+                    f(value, &mut |repr| {
                         hint::black_box(repr);
                     });
                 }
             }
-
-            duration = f64::min(duration, begin.elapsed().as_secs_f64() * 1000.0);
+            duration = Ord::min(duration, begin.elapsed());
         }
-
-        duration *= 1e6 / (PASSES * RandomDigitData::COUNT) as f64; // convert to nano second per operation
-        println!("  ({digit}, {duration:.2})");
+        println!(
+            "  ({digit}, {:.2})",
+            duration.as_secs_f64() * 1e9 / (PASSES * RandomDigitData::COUNT) as f64,
+        );
     }
 }
 
