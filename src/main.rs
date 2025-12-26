@@ -167,12 +167,8 @@ impl RandomDigitData {
     }
 }
 
-fn bench_random_digit(f: F, fname: &str) {
-    print!("Benchmarking randomdigit {fname:20} ... ");
-
-    let mut min_duration = f64::MAX;
-    let mut max_duration = f64::MIN;
-    let mut total_duration = 0.0;
+fn measure(f: F, fname: &str) {
+    println!("\n{fname}");
 
     for digit in 1..=RandomDigitData::MAX_DIGIT {
         let data = RandomDigitData::get_data(digit);
@@ -193,29 +189,13 @@ fn bench_random_digit(f: F, fname: &str) {
         }
 
         duration *= 1e6 / (ITERATION_PER_DIGIT * RandomDigitData::COUNT) as f64; // convert to nano second per operation
-        min_duration = f64::min(min_duration, duration);
-        max_duration = f64::max(max_duration, duration);
-        total_duration += duration;
-    }
-    println!(
-        "[{:8.3}ns, {:8.3}ns] {:8.3}ns",
-        min_duration,
-        max_duration,
-        total_duration / RandomDigitData::MAX_DIGIT as f64,
-    );
-}
-
-fn bench(f: F, fname: &str) {
-    bench_random_digit(f, fname);
-}
-
-fn bench_all() {
-    for test in TESTS {
-        bench(test.dtoa, test.fname);
+        println!("  ({digit}, {duration:.2})");
     }
 }
 
 fn main() {
     verify_all();
-    bench_all();
+    for test in TESTS {
+        measure(test.dtoa, test.fname);
+    }
 }
