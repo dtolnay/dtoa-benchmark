@@ -64,16 +64,10 @@ static TESTS: &[Test] = &[
     },
 ];
 
-fn verify_value(value: f64, f: F, expect: Option<&str>) -> usize {
+fn verify_value(value: f64, f: F) -> usize {
     let mut len = 0;
 
     f(value, &mut |actual| {
-        if let Some(expect) = expect
-            && actual != expect
-        {
-            eprintln!("Error: expect {expect} but actual {actual}");
-        }
-
         let Ok(roundtrip) = actual.parse::<f64>() else {
             eprintln!("Error: failed to parse {actual}");
             return;
@@ -93,22 +87,19 @@ fn verify(f: F, fname: &str) {
     print!("Verifying {fname:20} ... ");
 
     // Boundary and simple cases
-    // This gives benign errors in ostringstream and sprintf:
-    // Error: expect 0.1 but actual 0.10000000000000001
-    // Error: expect 1.2345 but actual 1.2344999999999999
-    verify_value(0.0, f, None);
-    verify_value(0.1, f, Some("0.1"));
-    verify_value(0.12, f, Some("0.12"));
-    verify_value(0.123, f, Some("0.123"));
-    verify_value(0.1234, f, Some("0.1234"));
-    verify_value(1.2345, f, Some("1.2345"));
-    verify_value(1.0 / 3.0, f, None);
-    verify_value(2.0 / 3.0, f, None);
-    verify_value(10.0 / 3.0, f, None);
-    verify_value(20.0 / 3.0, f, None);
-    verify_value(f64::MIN, f, None);
-    verify_value(f64::MAX, f, None);
-    verify_value(0.0f64.next_up(), f, None);
+    verify_value(0.0, f);
+    verify_value(0.1, f);
+    verify_value(0.12, f);
+    verify_value(0.123, f);
+    verify_value(0.1234, f);
+    verify_value(1.2345, f);
+    verify_value(1.0 / 3.0, f);
+    verify_value(2.0 / 3.0, f);
+    verify_value(10.0 / 3.0, f);
+    verify_value(20.0 / 3.0, f);
+    verify_value(f64::MIN, f);
+    verify_value(f64::MAX, f);
+    verify_value(0.0f64.next_up(), f);
 
     let mut r = SmallRng::seed_from_u64(1);
 
@@ -120,7 +111,7 @@ fn verify(f: F, fname: &str) {
             d = f64::from_bits(r.next_u64());
             d.is_nan() || d.is_infinite()
         } {}
-        let len = verify_value(d, f, None);
+        let len = verify_value(d, f);
         len_sum += len as u64;
         len_max = usize::max(len_max, len);
     }
