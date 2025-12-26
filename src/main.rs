@@ -14,52 +14,52 @@ use std::sync::OnceLock;
 use std::time::Instant;
 
 const VERIFY_RANDOM_COUNT: usize = 100_000;
-const ITERATION_PER_DIGIT: usize = 2;
-const TRIAL: usize = 3;
+const PASSES: usize = 2;
+const TRIALS: usize = 3;
 
 type F = fn(f64, &mut dyn FnMut(&str));
 
 #[derive(Copy, Clone)]
-struct Test {
-    fname: &'static str,
+struct Impl {
+    name: &'static str,
     dtoa: F,
 }
 
-static TESTS: &[Test] = &[
-    Test {
-        fname: "core[Display]",
+static IMPLS: &[Impl] = &[
+    Impl {
+        name: "core[Display]",
         dtoa: |value, f| {
             let mut buffer = ArrayString::<327>::new();
             write!(buffer, "{value}").unwrap();
             f(&buffer);
         },
     },
-    Test {
-        fname: "core[LowerExp]",
+    Impl {
+        name: "core[LowerExp]",
         dtoa: |value, f| {
             let mut buffer = ArrayString::<24>::new();
             write!(buffer, "{value:e}").unwrap();
             f(&buffer);
         },
     },
-    Test {
-        fname: "dtoa",
+    Impl {
+        name: "dtoa",
         dtoa: |value, f| f(dtoa::Buffer::new().format_finite(value)),
     },
-    Test {
-        fname: "ryu",
+    Impl {
+        name: "ryu",
         dtoa: |value, f| f(ryu::Buffer::new().format_finite(value)),
     },
-    Test {
-        fname: "teju",
+    Impl {
+        name: "teju",
         dtoa: |value, f| f(teju::Buffer::new().format_finite(value)),
     },
-    Test {
-        fname: "zmij",
+    Impl {
+        name: "zmij",
         dtoa: |value, f| f(zmij::Buffer::new().format_finite(value)),
     },
-    Test {
-        fname: "null",
+    Impl {
+        name: "null",
         dtoa: |_value, f| f(""),
     },
 ];
@@ -83,8 +83,8 @@ fn verify_value(value: f64, f: F) -> usize {
     len
 }
 
-fn verify(f: F, fname: &str) {
-    print!("Verifying {fname:20} ... ");
+fn verify(f: F, name: &str) {
+    print!("Verifying {name:20} ... ");
 
     // Boundary and simple cases
     verify_value(0.0, f);
@@ -121,9 +121,9 @@ fn verify(f: F, fname: &str) {
 }
 
 fn verify_all() {
-    for test in TESTS {
-        if test.fname != "null" {
-            verify(test.dtoa, test.fname);
+    for imp in IMPLS {
+        if imp.name != "null" {
+            verify(imp.dtoa, imp.name);
         }
     }
 }
@@ -167,17 +167,17 @@ impl RandomDigitData {
     }
 }
 
-fn measure(f: F, fname: &str) {
-    println!("\n{fname}");
+fn measure(f: F, name: &str) {
+    println!("\n{name}");
 
     for digit in 1..=RandomDigitData::MAX_DIGIT {
         let data = RandomDigitData::get_data(digit);
 
         let mut duration = f64::MAX;
-        for _trial in 0..TRIAL {
-            let timer = Instant::now();
+        for _trial in 0..TRIALS {
+            let begin = Instant::now();
 
-            for _iteration in 0..ITERATION_PER_DIGIT {
+            for _pass in 0..PASSES {
                 for &i in data {
                     f(i, &mut |repr| {
                         hint::black_box(repr);
@@ -185,17 +185,17 @@ fn measure(f: F, fname: &str) {
                 }
             }
 
-            duration = f64::min(duration, timer.elapsed().as_secs_f64() * 1000.0);
+            duration = f64::min(duration, begin.elapsed().as_secs_f64() * 1000.0);
         }
 
-        duration *= 1e6 / (ITERATION_PER_DIGIT * RandomDigitData::COUNT) as f64; // convert to nano second per operation
+        duration *= 1e6 / (PASSES * RandomDigitData::COUNT) as f64; // convert to nano second per operation
         println!("  ({digit}, {duration:.2})");
     }
 }
 
 fn main() {
     verify_all();
-    for test in TESTS {
-        measure(test.dtoa, test.fname);
+    for imp in IMPLS {
+        measure(imp.dtoa, imp.name);
     }
 }
