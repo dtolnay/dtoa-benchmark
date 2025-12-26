@@ -38,3 +38,5 @@ The following results are measured on a 2018 AMD Ryzen Threadripper 2990WX and
   <tr><td><a href="https://github.com/andrepd/teju-jagua-rs">teju</a></td><td align="right">35.1</td><td align="right">3.40&times;</td><td align="right">19.0</td><td align="right">3.22&times;</td></tr>
   <tr><td><a href="https://github.com/dtolnay/zmij">zmij</a></td><td align="right">24.5</td><td align="right">4.88&times;</td><td align="right">9.7</td><td align="right">6.30&times;</td></tr>
 </table>
+
+![performance](https://raw.githubusercontent.com/dtolnay/dtoa-benchmark/master/performance.png)
