@@ -164,6 +164,7 @@
   xmax=17.5,
   xlabel={f64 precision},
   yticklabel=\empty,
+  set layers,
 ]
   \addplot[color=Display] coordinates {
     (1, 98.46)
@@ -283,6 +284,6 @@
 \end{axis}
 \pgfresetboundingbox\path
   (f32.south west) -- ++(-0.46in,-0.39in)
-  rectangle (f64.north east) -- ++(0.05in,0.05in);
+  rectangle (f64.north east) -- ++(6pt,3pt);
 \end{tikzpicture}
 \end{document}
