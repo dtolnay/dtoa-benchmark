@@ -6,7 +6,6 @@ description = "This benchmark evaluates the performance of conversion from doubl
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/dtolnay/dtoa-benchmark"
-publish = false
 
 [dependencies]
 anyhow = "1"
