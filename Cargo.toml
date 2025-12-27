@@ -9,6 +9,7 @@ repository = "https://github.com/dtolnay/dtoa-benchmark"
 publish = false
 
 [dependencies]
+anyhow = "1"
 arrayvec = "0.7"
 dtoa = "1.0.10"
 rand = "0.9"

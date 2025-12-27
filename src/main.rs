@@ -5,8 +5,11 @@
     clippy::unreadable_literal
 )]
 
+mod args;
 mod traits;
 
+use crate::args::Type;
+use anyhow::Result;
 use arrayvec::ArrayString;
 use rand::distr::{Distribution, StandardUniform};
 use rand::rngs::SmallRng;
@@ -216,14 +219,22 @@ where
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     verify_all();
 
     let data = Data::random(COUNT);
+    let mut prev_name = None;
 
-    for imp in IMPLS {
-        println!("\n{}", imp.name);
-        measure(&data.f32, imp.f32);
-        measure(&data.f64, imp.f64);
+    for (imp, ty) in args::parse()? {
+        if prev_name != Some(imp.name) {
+            println!("\n{}", imp.name);
+            prev_name = Some(imp.name);
+        }
+        match ty {
+            Type::F32 => measure(&data.f32, imp.f32),
+            Type::F64 => measure(&data.f64, imp.f64),
+        }
     }
+
+    Ok(())
 }
