@@ -40,7 +40,7 @@
   },
   area legend/.style={
     legend image code/.code={
-      \draw[#1] (0cm,-0.1cm) rectangle (0.3cm,0.1cm);
+      \draw[#1] (0pt,0.3pt) rectangle (0.9em,1.4ex);
     },
   },
   highlight/.style={
@@ -71,6 +71,8 @@
     at={(0.05,0.975)},
     font=\sansmath\sffamily,
     /tikz/every even column/.append style={column sep=6pt},
+    nodes={anchor=base, inner ysep=0.5pt},
+    execute at begin node={\rule{0pt}{8pt}},
   },
   legend cell align=left,
   legend columns=-1,
