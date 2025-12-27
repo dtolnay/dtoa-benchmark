@@ -9,6 +9,13 @@
 \definecolor{ryu}{HTML}{D62728}
 \definecolor{teju}{HTML}{9467BD}
 \definecolor{zmij}{HTML}{9C564B}
+\tikzset{
+  on layer/.code={
+    \pgfonlayer{#1}\begingroup
+    \aftergroup\endpgfonlayer
+    \aftergroup\endgroup
+  },
+}
 \pgfplotsset{
   every axis/.append style={
     x=12pt,
@@ -34,6 +41,16 @@
   area legend/.style={
     legend image code/.code={
       \draw[#1] (0cm,-0.1cm) rectangle (0.3cm,0.1cm);
+    },
+  },
+  highlight/.style={
+    preaction={
+      on layer=pre main,
+      line width=6pt,
+      opacity=0.5,
+      line cap=round,
+      line join=round,
+      yellow,
     },
   },
 }
