@@ -19,7 +19,7 @@ number of values of each precision.
 
 **Measurement:** For each dtoa library, for each precision group, we perform
 multiple passes over the input data and take the duration of the fastest pass.
-Then these fastest durations are averaged across the 17 precision groups to
+Then these fastest durations are averaged across the 17 f64 precision groups to
 produce the table below.
 
 Build and run the benchmark yourself using `cargo run --release`.
