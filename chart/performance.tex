@@ -66,7 +66,12 @@
   ylabel={duration\enskip(\kern-1pt nanoseconds\kern-1pt)},
   yticklabel shift=-1.25pt,
   set layers,
-  legend style={anchor=north west, at={(0.05,0.975)}, font=\sansmath\sffamily},
+  legend style={
+    anchor=north west,
+    at={(0.05,0.975)},
+    font=\sansmath\sffamily,
+    /tikz/every even column/.append style={column sep=6pt},
+  },
   legend cell align=left,
   legend columns=10,
 ]
