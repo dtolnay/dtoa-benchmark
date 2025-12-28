@@ -13,6 +13,7 @@ mod verify;
 use crate::args::Type;
 use anyhow::Result;
 use arrayvec::ArrayString;
+use lexical_core::FormattedSize;
 use rand::SeedableRng as _;
 use rand::distr::{Distribution, StandardUniform};
 use rand::rngs::SmallRng;
@@ -65,6 +66,19 @@ static IMPLS: &[Impl] = &[
         name: "dtoa",
         f32: |value, f| f(dtoa::Buffer::new().format_finite(value)),
         f64: |value, f| f(dtoa::Buffer::new().format_finite(value)),
+    },
+    Impl {
+        name: "lexical",
+        f32: |value, f| {
+            let mut buffer = [0u8; f32::FORMATTED_SIZE_DECIMAL];
+            let bytes = lexical_core::write(value, &mut buffer);
+            f(unsafe { str::from_utf8_unchecked(bytes) });
+        },
+        f64: |value, f| {
+            let mut buffer = [0u8; f64::FORMATTED_SIZE_DECIMAL];
+            let bytes = lexical_core::write(value, &mut buffer);
+            f(unsafe { str::from_utf8_unchecked(bytes) });
+        },
     },
     Impl {
         name: "ryu",

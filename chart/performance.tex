@@ -6,9 +6,10 @@
 \definecolor{Display}{HTML}{1F77B4}
 \definecolor{LowerExp}{HTML}{FF7F0E}
 \definecolor{dtoa}{HTML}{2CA02C}
-\definecolor{ryu}{HTML}{D62728}
-\definecolor{teju}{HTML}{9467BD}
-\definecolor{zmij}{HTML}{9C564B}
+\definecolor{lexical}{HTML}{D62728}
+\definecolor{ryu}{HTML}{9467BD}
+\definecolor{teju}{HTML}{9C564B}
+\definecolor{zmij}{HTML}{E377C2}
 \tikzset{
   on layer/.code={
     \pgfonlayer{#1}\begingroup
@@ -116,6 +117,19 @@
     (8, 65.08)
     (9, 65.41)
   };
+  \addlegendentry{lexical}
+  \addlegendimage{color=lexical, fill, area legend}
+  \addplot[color=lexical] coordinates {
+    (1, 31.44)
+    (2, 32.18)
+    (3, 31.25)
+    (4, 31.70)
+    (5, 31.24)
+    (6, 31.25)
+    (7, 30.68)
+    (8, 34.69)
+    (9, 34.73)
+  };
   \addlegendentry{ryu}
   \addlegendimage{color=ryu, fill, area legend}
   \addplot[color=ryu] coordinates {
@@ -222,6 +236,25 @@
     (15, 71.57)
     (16, 73.27)
     (17, 79.99)
+  };
+  \addplot[color=lexical] coordinates {
+    (1, 37.22)
+    (2, 38.81)
+    (3, 37.15)
+    (4, 38.04)
+    (5, 36.67)
+    (6, 37.81)
+    (7, 36.23)
+    (8, 37.64)
+    (9, 37.19)
+    (10, 37.53)
+    (11, 36.36)
+    (12, 36.91)
+    (13, 35.97)
+    (14, 36.47)
+    (15, 37.04)
+    (16, 36.90)
+    (17, 40.48)
   };
   \addplot[color=ryu] coordinates {
     (1, 56.11)
