@@ -1,18 +1,28 @@
 use anyhow::{Result, bail};
 use std::env;
 
+pub struct Args {
+    pub benchmark: Vec<(&'static crate::Impl, Type)>,
+    pub unpredictable: bool,
+}
+
 pub enum Type {
     F32,
     F64,
 }
 
-pub fn parse() -> Result<Vec<(&'static crate::Impl, Type)>> {
+pub fn parse() -> Result<Args> {
     let mut args = env::args_os();
     args.next().unwrap();
 
     let mut benchmark = Vec::new();
+    let mut unpredictable = false;
     'args: for arg in args {
         if let Some(arg) = arg.to_str() {
+            if arg == "--unpredictable" {
+                unpredictable = true;
+                continue;
+            }
             let (lib, ty) = match arg.split_once(':') {
                 Some((lib, ty)) => (lib, Some(ty)),
                 None => (arg, None),
@@ -48,5 +58,8 @@ pub fn parse() -> Result<Vec<(&'static crate::Impl, Type)>> {
         }
     }
 
-    Ok(benchmark)
+    Ok(Args {
+        benchmark,
+        unpredictable,
+    })
 }
