@@ -39,13 +39,12 @@ where
     T: traits::Float,
     StandardUniform: Distribution<T::Bits>,
 {
-    let mut d;
-    while {
+    loop {
         let bits = StandardUniform.sample(rng);
-        d = T::from_bits(bits);
-        !d.is_finite()
-    } {}
-
-    // Convert to string with limited digits, and convert it back.
-    format!("{d:.prec$e}").parse().unwrap()
+        let float = T::from_bits(bits);
+        if float.is_finite() {
+            // Convert to string with limited digits, and convert it back.
+            return format!("{float:.prec$e}").parse().unwrap();
+        }
+    }
 }
