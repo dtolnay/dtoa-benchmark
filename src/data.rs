@@ -2,34 +2,65 @@ use crate::traits;
 use rand::SeedableRng as _;
 use rand::distr::{Distribution, StandardUniform};
 use rand::rngs::SmallRng;
+use rand::seq::SliceRandom as _;
 
 pub struct Data {
-    pub f32: [Vec<f32>; 9],
-    pub f64: [Vec<f64>; 17],
+    pub f32: DataForType<f32, 9>,
+    pub f64: DataForType<f64, 17>,
+}
+
+pub struct DataForType<T, const N: usize> {
+    pub count: usize,
+    pub mixed: Vec<T>,
+    pub by_precision: [Vec<T>; N],
+    pub unpredictable: bool,
 }
 
 impl Data {
-    pub fn random(count: usize) -> Self {
+    pub fn random(count: usize, unpredictable: bool) -> Self {
         let mut rng = SmallRng::seed_from_u64(1);
-        let mut data = Data {
-            f32: [const { Vec::new() }; 9],
-            f64: [const { Vec::new() }; 17],
-        };
-        fill(&mut rng, &mut data.f32, count);
-        fill(&mut rng, &mut data.f64, count);
-        data
+        Data {
+            f32: DataForType::random(&mut rng, count, unpredictable),
+            f64: DataForType::random(&mut rng, count, unpredictable),
+        }
     }
 }
 
-fn fill<T, const N: usize>(rng: &mut SmallRng, data: &mut [Vec<T>; N], count: usize)
+impl<T, const N: usize> DataForType<T, N>
 where
     T: traits::Float,
     StandardUniform: Distribution<T::Bits>,
 {
-    for (prec, vec) in data.iter_mut().enumerate() {
-        vec.reserve_exact(count);
-        for _i in 0..count {
-            vec.push(sample(rng, prec));
+    fn random(rng: &mut SmallRng, count: usize, unpredictable: bool) -> Self {
+        let mut mixed = Vec::new();
+        let mut by_precision = [const { Vec::new() }; N];
+        if unpredictable {
+            mixed.reserve_exact(count);
+            for i in 0..count {
+                mixed.push(sample(rng, i % N));
+            }
+            mixed.shuffle(rng);
+            for (prec, vec) in by_precision.iter_mut().enumerate() {
+                vec.reserve_exact(count * 2);
+                vec.extend_from_slice(&mixed);
+                for _ in 0..count {
+                    vec.push(sample(rng, prec));
+                }
+                vec.shuffle(rng);
+            }
+        } else {
+            for (prec, vec) in by_precision.iter_mut().enumerate() {
+                vec.reserve_exact(count);
+                for _i in 0..count {
+                    vec.push(sample(rng, prec));
+                }
+            }
+        }
+        DataForType {
+            count,
+            mixed,
+            by_precision,
+            unpredictable,
         }
     }
 }

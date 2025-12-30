@@ -12,7 +12,7 @@ mod traits;
 mod verify;
 
 use crate::args::Type;
-use crate::data::Data;
+use crate::data::{Data, DataForType};
 use anyhow::Result;
 use arrayvec::ArrayString;
 use lexical_core::FormattedSize;
@@ -102,37 +102,51 @@ static IMPLS: &[Impl] = &[
     },
 ];
 
-fn measure<T, const N: usize>(data: &[Vec<T>; N], f: F<T>)
+fn measure<T, const N: usize>(data: &DataForType<T, N>, f: F<T>)
 where
     T: traits::Float,
 {
     println!("  {}", any::type_name::<T>());
-    for (i, vec) in data.iter().enumerate() {
-        let mut duration = Duration::MAX;
-        for _trial in 0..TRIALS {
-            let begin = Instant::now();
-            for _pass in 0..PASSES {
-                for &value in vec {
-                    f(value, &mut |repr| {
-                        hint::black_box(repr);
-                    });
-                }
-            }
-            duration = Ord::min(duration, begin.elapsed());
-        }
+    let baseline = if data.unpredictable {
+        measure_once(&data.mixed, f)
+    } else {
+        Duration::ZERO
+    };
+    for (i, vec) in data.by_precision.iter().enumerate() {
+        let duration = measure_once(vec, f).saturating_sub(baseline);
         println!(
             "    ({}, {:.2})",
             i + 1,
-            duration.as_secs_f64() * 1e9 / (PASSES * vec.len()) as f64,
+            duration.as_secs_f64() * 1e9 / (PASSES * data.count) as f64,
         );
     }
 }
 
+fn measure_once<T>(data: &[T], f: F<T>) -> Duration
+where
+    T: traits::Float,
+{
+    let mut duration = Duration::MAX;
+    for _trial in 0..TRIALS {
+        let begin = Instant::now();
+        for _pass in 0..PASSES {
+            for &value in data {
+                f(value, &mut |repr| {
+                    hint::black_box(repr);
+                });
+            }
+        }
+        duration = Ord::min(duration, begin.elapsed());
+    }
+    duration
+}
+
 fn main() -> Result<()> {
-    let data = Data::random(COUNT);
+    let args = args::parse()?;
+    let data = Data::random(COUNT, args.unpredictable);
     let mut prev_name = None;
 
-    for (imp, ty) in args::parse()? {
+    for (imp, ty) in args.benchmark {
         if prev_name != Some(imp.name) {
             println!("\n{}", imp.name);
             prev_name = Some(imp.name);
