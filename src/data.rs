@@ -29,17 +29,23 @@ where
     for (prec, vec) in data.iter_mut().enumerate() {
         vec.reserve_exact(count);
         for _i in 0..count {
-            let mut d;
-            while {
-                let bits = StandardUniform.sample(rng);
-                d = T::from_bits(bits);
-                !d.is_finite()
-            } {}
-
-            // Convert to string with limited digits, and convert it back.
-            let buffer = format!("{d:.prec$e}");
-            let roundtrip = buffer.parse().unwrap();
-            vec.push(roundtrip);
+            vec.push(sample(rng, prec));
         }
     }
+}
+
+fn sample<T>(rng: &mut SmallRng, prec: usize) -> T
+where
+    T: traits::Float,
+    StandardUniform: Distribution<T::Bits>,
+{
+    let mut d;
+    while {
+        let bits = StandardUniform.sample(rng);
+        d = T::from_bits(bits);
+        !d.is_finite()
+    } {}
+
+    // Convert to string with limited digits, and convert it back.
+    format!("{d:.prec$e}").parse().unwrap()
 }
