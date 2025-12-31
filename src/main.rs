@@ -22,7 +22,7 @@ use std::hint;
 use std::time::{Duration, Instant};
 
 const COUNT: usize = if cfg!(miri) { 10 } else { 100_000 };
-const TRIALS: usize = if cfg!(miri) { 1 } else { 3 };
+const TRIALS: usize = if cfg!(miri) { 1 } else { 4 };
 const PASSES: usize = if cfg!(miri) { 1 } else { 12 };
 
 type F<T> = fn(T, &mut dyn FnMut(&str));
