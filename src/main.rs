@@ -84,6 +84,11 @@ static IMPLS: &[Impl] = &[
         f32: Some(|value, f| f(ryu::Buffer::new().format_finite(value))),
         f64: Some(|value, f| f(ryu::Buffer::new().format_finite(value))),
     },
+    Impl {
+        name: "dragonbox",
+        f32: None,
+        f64: Some(|value, f| f(dragonbox::Buffer::new().format_finite(value))),
+    },
     #[cfg(not(miri))] // https://github.com/andrepd/teju-jagua-rs/issues/1
     Impl {
         name: "teju",

@@ -10,6 +10,7 @@ repository = "https://github.com/dtolnay/dtoa-benchmark"
 [dependencies]
 anyhow = "1"
 arrayvec = "0.7"
+dragonbox = "0.1.11"
 dtoa = "1.0.10"
 lexical-core = "1"
 rand = "0.9"
