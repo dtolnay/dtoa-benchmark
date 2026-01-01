@@ -62,8 +62,10 @@ fn verify(f: crate::F<f64>, name: &str) {
 #[test]
 fn verify_all() {
     for imp in crate::IMPLS {
-        if imp.name != "null" {
-            verify(imp.f64, imp.name);
+        if imp.name != "null"
+            && let Some(f) = imp.f64
+        {
+            verify(f, imp.name);
         }
     }
 }

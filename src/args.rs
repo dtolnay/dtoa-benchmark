@@ -2,13 +2,13 @@ use anyhow::{Result, bail};
 use std::env;
 
 pub struct Args {
-    pub benchmark: Vec<(&'static crate::Impl, Type)>,
+    pub benchmark: Vec<(&'static str, Type)>,
     pub unpredictable: bool,
 }
 
 pub enum Type {
-    F32,
-    F64,
+    F32(crate::F<f32>),
+    F64(crate::F<f64>),
 }
 
 pub fn parse() -> Result<Args> {
@@ -31,17 +31,25 @@ pub fn parse() -> Result<Args> {
                 if imp.name == lib {
                     match ty {
                         None => {
-                            benchmark.push((imp, Type::F32));
-                            benchmark.push((imp, Type::F64));
+                            if let Some(f) = imp.f32 {
+                                benchmark.push((imp.name, Type::F32(f)));
+                            }
+                            if let Some(f) = imp.f64 {
+                                benchmark.push((imp.name, Type::F64(f)));
+                            }
                             continue 'args;
                         }
                         Some("f32") => {
-                            benchmark.push((imp, Type::F32));
-                            continue 'args;
+                            if let Some(f) = imp.f32 {
+                                benchmark.push((imp.name, Type::F32(f)));
+                                continue 'args;
+                            }
                         }
                         Some("f64") => {
-                            benchmark.push((imp, Type::F64));
-                            continue 'args;
+                            if let Some(f) = imp.f64 {
+                                benchmark.push((imp.name, Type::F64(f)));
+                                continue 'args;
+                            }
                         }
                         Some(_) => {}
                     }
@@ -53,8 +61,12 @@ pub fn parse() -> Result<Args> {
 
     if benchmark.is_empty() {
         for imp in crate::IMPLS {
-            benchmark.push((imp, Type::F32));
-            benchmark.push((imp, Type::F64));
+            if let Some(f) = imp.f32 {
+                benchmark.push((imp.name, Type::F32(f)));
+            }
+            if let Some(f) = imp.f64 {
+                benchmark.push((imp.name, Type::F64(f)));
+            }
         }
     }
 

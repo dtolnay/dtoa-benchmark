@@ -30,75 +30,75 @@ type F<T> = fn(T, &mut dyn FnMut(&str));
 #[derive(Copy, Clone)]
 struct Impl {
     name: &'static str,
-    f32: F<f32>,
-    f64: F<f64>,
+    f32: Option<F<f32>>,
+    f64: Option<F<f64>>,
 }
 
 static IMPLS: &[Impl] = &[
     Impl {
         name: "core[Display]",
-        f32: |value, f| {
+        f32: Some(|value, f| {
             let mut buffer = ArrayString::<327>::new();
             write!(buffer, "{value}").unwrap();
             f(&buffer);
-        },
-        f64: |value, f| {
+        }),
+        f64: Some(|value, f| {
             let mut buffer = ArrayString::<327>::new();
             write!(buffer, "{value}").unwrap();
             f(&buffer);
-        },
+        }),
     },
     Impl {
         name: "core[LowerExp]",
-        f32: |value, f| {
+        f32: Some(|value, f| {
             let mut buffer = ArrayString::<24>::new();
             write!(buffer, "{value:e}").unwrap();
             f(&buffer);
-        },
-        f64: |value, f| {
+        }),
+        f64: Some(|value, f| {
             let mut buffer = ArrayString::<24>::new();
             write!(buffer, "{value:e}").unwrap();
             f(&buffer);
-        },
+        }),
     },
     Impl {
         name: "dtoa",
-        f32: |value, f| f(dtoa::Buffer::new().format_finite(value)),
-        f64: |value, f| f(dtoa::Buffer::new().format_finite(value)),
+        f32: Some(|value, f| f(dtoa::Buffer::new().format_finite(value))),
+        f64: Some(|value, f| f(dtoa::Buffer::new().format_finite(value))),
     },
     Impl {
         name: "lexical",
-        f32: |value, f| {
+        f32: Some(|value, f| {
             let mut buffer = [0u8; f32::FORMATTED_SIZE_DECIMAL];
             let bytes = lexical_core::write(value, &mut buffer);
             f(unsafe { str::from_utf8_unchecked(bytes) });
-        },
-        f64: |value, f| {
+        }),
+        f64: Some(|value, f| {
             let mut buffer = [0u8; f64::FORMATTED_SIZE_DECIMAL];
             let bytes = lexical_core::write(value, &mut buffer);
             f(unsafe { str::from_utf8_unchecked(bytes) });
-        },
+        }),
     },
     Impl {
         name: "ryu",
-        f32: |value, f| f(ryu::Buffer::new().format_finite(value)),
-        f64: |value, f| f(ryu::Buffer::new().format_finite(value)),
+        f32: Some(|value, f| f(ryu::Buffer::new().format_finite(value))),
+        f64: Some(|value, f| f(ryu::Buffer::new().format_finite(value))),
     },
     #[cfg(not(miri))] // https://github.com/andrepd/teju-jagua-rs/issues/1
     Impl {
         name: "teju",
-        f32: |value, f| f(teju::Buffer::new().format_finite(value)),
-        f64: |value, f| f(teju::Buffer::new().format_finite(value)),
+        f32: Some(|value, f| f(teju::Buffer::new().format_finite(value))),
+        f64: Some(|value, f| f(teju::Buffer::new().format_finite(value))),
     },
     Impl {
         name: "zmij",
-        f32: |value, f| f(zmij::Buffer::new().format_finite(value)),
-        f64: |value, f| f(zmij::Buffer::new().format_finite(value)),
+        f32: Some(|value, f| f(zmij::Buffer::new().format_finite(value))),
+        f64: Some(|value, f| f(zmij::Buffer::new().format_finite(value))),
     },
     Impl {
         name: "null",
-        f32: |_value, f| f(""),
-        f64: |_value, f| f(""),
+        f32: Some(|_value, f| f("")),
+        f64: Some(|_value, f| f("")),
     },
 ];
 
@@ -146,14 +146,14 @@ fn main() -> Result<()> {
     let data = Data::random(COUNT, args.unpredictable);
     let mut prev_name = None;
 
-    for (imp, ty) in args.benchmark {
-        if prev_name != Some(imp.name) {
-            println!("\n{}", imp.name);
-            prev_name = Some(imp.name);
+    for (name, ty) in args.benchmark {
+        if prev_name != Some(name) {
+            println!("\n{name}");
+            prev_name = Some(name);
         }
         match ty {
-            Type::F32 => measure(&data.f32, imp.f32),
-            Type::F64 => measure(&data.f64, imp.f64),
+            Type::F32(f) => measure(&data.f32, f),
+            Type::F64(f) => measure(&data.f64, f),
         }
     }
 
