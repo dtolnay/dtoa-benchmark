@@ -36,7 +36,7 @@ The following results are measured on a 2018 AMD Ryzen Threadripper 2990WX and
   <tr><td><a href="https://github.com/dtolnay/dtoa">dtoa</a></td><td align="right">68.3</td><td align="right">1.75&times;</td><td align="right">43.7</td><td align="right">1.40&times;</td></tr>
   <tr><td><a href="https://github.com/dtolnay/ryu">ryu</a></td><td align="right">48.1</td><td align="right">2.48&times;</td><td align="right">26.4</td><td align="right">2.31&times;</td></tr>
   <tr><td><a href="https://github.com/andrepd/teju-jagua-rs">teju</a></td><td align="right">35.1</td><td align="right">3.40&times;</td><td align="right">19.0</td><td align="right">3.22&times;</td></tr>
-  <tr><td><a href="https://github.com/dtolnay/zmij">zmij</a></td><td align="right">24.5</td><td align="right">4.88&times;</td><td align="right">9.7</td><td align="right">6.30&times;</td></tr>
+  <tr><td><a href="https://github.com/dtolnay/zmij">zmij</a></td><td align="right">20.1</td><td align="right">5.95&times;</td><td align="right">7.7</td><td align="right">7.93&times;</td></tr>
 </table>
 
 ![performance](https://raw.githubusercontent.com/dtolnay/dtoa-benchmark/master/performance.png)
