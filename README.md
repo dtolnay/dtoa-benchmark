@@ -35,6 +35,7 @@ The following results are measured on a 2018 AMD Ryzen Threadripper 2990WX and
   <tr><td><a href="https://doc.rust-lang.org/std/fmt/trait.Display.html">libcore</a></td><td align="right">119.5</td><td align="right">1.00&times;</td><td align="right">61.1</td><td align="right">1.00&times;</td></tr>
   <tr><td><a href="https://github.com/dtolnay/dtoa">dtoa</a></td><td align="right">68.3</td><td align="right">1.75&times;</td><td align="right">43.7</td><td align="right">1.40&times;</td></tr>
   <tr><td><a href="https://github.com/dtolnay/ryu">ryu</a></td><td align="right">48.1</td><td align="right">2.48&times;</td><td align="right">26.4</td><td align="right">2.31&times;</td></tr>
+  <tr><td><a href="https://github.com/Alexhuszagh/rust-lexical">lexical</a></td><td align="right">37.3</td><td align="right">3.20&times;</td><td align="right">21.2</td><td align="right">2.88&times;</td></tr>
   <tr><td><a href="https://github.com/andrepd/teju-jagua-rs">teju</a></td><td align="right">35.1</td><td align="right">3.40&times;</td><td align="right">19.0</td><td align="right">3.22&times;</td></tr>
   <tr><td><a href="https://github.com/dtolnay/zmij">zmij</a></td><td align="right">20.1</td><td align="right">5.95&times;</td><td align="right">7.7</td><td align="right">7.93&times;</td></tr>
 </table>
