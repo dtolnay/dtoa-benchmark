@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@clippy
-      - run: cargo clippy -- -Dclippy::all -Dclippy::pedantic
+      - run: cargo clippy --workspace --tests -- -Dclippy::all -Dclippy::pedantic
 
   miri:
     name: Miri

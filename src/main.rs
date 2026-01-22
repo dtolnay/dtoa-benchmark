@@ -101,6 +101,11 @@ static IMPLS: &[Impl] = &[
         f64: Some(|value, f| f(zmij::Buffer::new().format_finite(value))),
     },
     Impl {
+        name: "fpfmt",
+        f32: None,
+        f64: Some(|value, f| f(fpfmt::Buffer::new().format_finite(value))),
+    },
+    Impl {
         name: "null",
         f32: Some(|_value, f| f("")),
         f64: Some(|_value, f| f("")),
