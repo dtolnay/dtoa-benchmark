@@ -12,8 +12,11 @@ anyhow = "1"
 arrayvec = "0.7"
 dragonbox = "0.1.11"
 dtoa = "1.0.10"
+fpfmt = { path = "fpfmt" }
 lexical-core = "1"
 rand = "0.9"
 ryu = "1.0.21"
 teju = "0.1.1"
 zmij = "1.0.0"
+
+[workspace]

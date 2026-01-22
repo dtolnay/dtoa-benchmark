@@ -1,0 +1,9 @@
+[package]
+name = "fpfmt"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dev-dependencies]
+opt-level = "1"
+rand = "0.9"
