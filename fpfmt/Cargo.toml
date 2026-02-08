@@ -6,4 +6,4 @@ publish = false
 
 [dev-dependencies]
 opt-level = "1"
-rand = "0.9"
+rand = "0.10"

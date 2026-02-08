@@ -1,7 +1,7 @@
 #![allow(clippy::float_cmp)]
 
-use rand::rngs::SmallRng;
-use rand::{RngCore as _, SeedableRng as _};
+use rand::rngs::{SmallRng, SysRng};
+use rand::{Rng as _, SeedableRng as _};
 
 const N: usize = if cfg!(miri) {
     500
@@ -14,7 +14,7 @@ const N: usize = if cfg!(miri) {
 #[test]
 fn roundtrip() {
     let mut fpfmt_buffer = fpfmt::Buffer::new();
-    let mut rng = SmallRng::from_os_rng();
+    let mut rng = SmallRng::try_from_rng(&mut SysRng).unwrap();
     let mut fail = 0;
 
     for _ in 0..N {
