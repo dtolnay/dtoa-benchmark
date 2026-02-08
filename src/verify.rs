@@ -1,5 +1,5 @@
 use rand::rngs::SmallRng;
-use rand::{RngCore as _, SeedableRng as _};
+use rand::{Rng as _, SeedableRng as _};
 
 const VERIFY_RANDOM_COUNT: usize = if cfg!(miri) { 40 } else { 100_000 };
 
